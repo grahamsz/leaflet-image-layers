@@ -6,7 +6,7 @@ var queue = require('d3-queue').queue;
 var cacheBusterDate = +new Date();
 
 // leaflet-image
-module.exports = function leafletImage(map, callback) {
+module.exports = function leafletImage(map, layerSelector, callback) {
 
     var hasMapbox = !!L.mapbox;
 
@@ -29,8 +29,8 @@ module.exports = function leafletImage(map, callback) {
 
     // layers are drawn in the same order as they are composed in the DOM:
     // tiles, paths, and then markers
-    map.eachLayer(drawTileLayer);
-    map.eachLayer(drawEsriDynamicLayer);
+    map.eachLayer(function(l) { if (layerSelector(l)) { drawTileLayer(l);} });
+   // map.eachLayer(drawEsriDynamicLayer);
     
     if (map._pathRoot) {
         layerQueue.defer(handlePathRoot, map._pathRoot);
@@ -38,7 +38,7 @@ module.exports = function leafletImage(map, callback) {
         var firstCanvas = map._panes.overlayPane.getElementsByTagName('canvas').item(0);
         if (firstCanvas) { layerQueue.defer(handlePathRoot, firstCanvas); }
     }
-    map.eachLayer(drawMarkerLayer);
+  //  map.eachLayer(drawMarkerLayer);
     layerQueue.awaitAll(layersDone);
 
     function drawTileLayer(l) {
@@ -250,9 +250,8 @@ module.exports = function leafletImage(map, callback) {
     }
 
     function addCacheString(url) {
-        // remove any cache busting
-        return url;
-     //   return url + ((url.match(/\?/)) ? '&' : '?') + 'cache=' + cacheBusterDate;
+        return url;  // disable cache busting
+        //return url + ((url.match(/\?/)) ? '&' : '?') + 'cache=' + cacheBusterDate;
     }
 
     function isDataURL(url) {
